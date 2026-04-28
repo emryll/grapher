@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func ParseCommand(tokens []string) error {
 	//TODO:
 
@@ -11,7 +13,7 @@ func CliOverview() {
 	//TODO:
 }
 
-func CliGetState() {
+func CliGetState(session Session) {
 	//TODO: print run description
 	//TODO: print which snapshot is selected
 
@@ -19,8 +21,18 @@ func CliGetState() {
 	//TODO: if one is selected, print graph count, node count, connection count + stamp
 }
 
-func CliGetGraphs() {
-	//TODO: list graphs
+func (gs GraphSnapshot) GetTotalConnections() int {
+	var connections int
+	for _, p := range gs {
+		connections += len(p.Connections)
+	}
+	return connections
+}
+
+func CliGetGraphs(snap Snapshot) {
+	for i, g := range snap.Graphs {
+		fmt.Printf("\t%d) %d nodes, %d connections\n", i, len(g), g.GetTotalConnections())
+	}
 }
 
 //TODO: view pool command
