@@ -37,3 +37,27 @@ func CliGetGraphs(snap Snapshot) {
 
 //TODO: view pool command
 //TODO: get nodes with more than n connections
+
+func CliGetByConnection(snap Snapshot, min int) {
+	nodes := GetNodesByNumConnections(snap, min)
+	if len(nodes) == 0 {
+		fmt.Printf("\t[!] Found no processes with %d or more connections.\n", min)
+		return
+	}
+	fmt.Printf("\t[*] Found %d processes with %d or more connections:\n", min)
+	for _, p := range nodes {
+		fmt.Printf("\t*\t%s (PID %d)  :  %d connections\n", p.Name, p.ProcessId, len(p.Connections))
+	}
+}
+
+func GetNodesByNumConnections(snap Snapshot, min int) []*ProcessSnapshot {
+	var nodes []*ProcessSnapshot
+	for _, g := range snap.Graphs {
+		for _, p := range g {
+			if len(p.Connections) >= min {
+				nodes = append(nodes, p)
+			}
+		}
+	}
+	return nodes
+}
