@@ -36,7 +36,17 @@ func CliGetGraphs(snap Snapshot) {
 	}
 }
 
-//TODO: view pool command
+func CliGetPools(snap Snapshot, rule Traversal) {
+	pools := snap.CreatePools()
+	avg, median := GetAvgAndMedian(pools)
+	fmt.Printf("\t[*] Created %d pools (%.2f avg size, %.2f median)\n", len(pools), avg, median)
+	for _, pool := range pools {
+		fmt.Printf("\n%s\n\n\tPool %d:\n")
+		for pid, p := range pool {
+			fmt.Printf("\t*\t%s (PID %d)", p.Name, pid)
+		}
+	}
+}
 
 func CliGetByConnection(snap Snapshot, min int) {
 	nodes := GetNodesByNumConnections(snap, min)
