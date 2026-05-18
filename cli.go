@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-// @return     exit, err
-func ParseCommand(tokens []string, session *Session) {
+// @return     exit
+func ParseCommand(tokens []string, session *Session) bool {
 	if len(tokens) == 0 {
-		return
+		return false
 	}
 	switch strings.ToLower(tokens[0]) {
 	case "help":
@@ -20,12 +20,18 @@ func ParseCommand(tokens []string, session *Session) {
 	case "select":
 		if len(tokens) < 2 {
 			fmt.Printf("\tNot enough args. Usage: select <id>")
-			return
+			return false
 		}
 		CliSelectSnap(session, tokens[1])
 	case "show":
 	case "graphs":
+		if session.Selected == nil {
+			fmt.Printf("\tNo snapshot selected.\n\tSelect a snapshot with:\n\t\tselect <name>\n")
+			return false
+		}
+		CliGetGraphs(session.Selected)
 	}
+	return false
 }
 
 func CliPrintHelp() {
@@ -34,7 +40,20 @@ func CliPrintHelp() {
 
 // TODO: overview command
 func CliOverview(session *Session) {
+	session.PrintDescription()
+	if session.Selected == nil {
+		fmt.Printf("\tNo snapshot selected. %d available\n", len(session.Snapshots))
+		fmt.Printf("\tSelect a snapshot with:\n\t\tselect <name>\n")
+		return
+	}
 
+	fmt.Printf("\t%s\n", line)
+	nodes := GetMostWideReaching(3)
+	fmt.Printf("\tMost wide-reaching processes:\n")
+	for _, node := range nodes {
+		fmt.Printf("\t- %s (PID %d)  : %d connections\n",
+			node.Process.Name, node.ProcessId, len(node.Process.Connections))
+	}
 }
 
 func CliSelectSnap(session *Session, name string) {
@@ -54,7 +73,7 @@ func CliGetState(session *Session) {
 	session.PrintSelected()
 }
 
-func CliGetGraphs(snap Snapshot) {
+func CliGetGraphs(snap *Snapshot) {
 	for i, g := range snap.Graphs {
 		fmt.Printf("\t%d) %d nodes, %d connections\n", i, len(g), g.GetTotalConnections())
 	}
