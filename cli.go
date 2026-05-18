@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -37,7 +38,7 @@ func ParseCommand(tokens []string, session *Session) bool {
 		}
 		CliGetGraphs(session.Selected)
 
-	case "show":
+	case "show", "view":
 		if len(tokens) < 3 {
 			fmt.Printf("\tNot enough args. Usage: show <type> <id>\n\n")
 			return false
@@ -50,7 +51,21 @@ func ParseCommand(tokens []string, session *Session) bool {
 		case "process", "ps":
 			//TODO: convert string to pid
 		}
-
+	case "find":
+		if len(tokens) < 2 {
+			fmt.Printf("\tNot enough args. Usage: find <min>\n\n")
+			return false
+		}
+		if session.Selected == nil {
+			fmt.Printf("\tNo snapshot selected\n\tSelect a snapshot with:\n\t\tselect <name>\n\n")
+			return false
+		}
+		min, err := strconv.Atoi(tokens[1])
+		if err != nil {
+			fmt.Printf("\tFailed to convert \"%s\" to number\n\t\tError: %v\n\n", tokens[1], err)
+			return false
+		}
+		CliGetByConnection(*session.Selected, min)
 	}
 	return false
 }
@@ -85,6 +100,7 @@ func CliPrintHelp() {
 	fmt.Println("\t\toverview        Get a quick overview about session and selected snap.")
 	fmt.Println("\t\tgraphs          View the graphs in the currently selected snap.")
 	//fmt.Println("\t\tpools           ")
+	fmt.Println("\t\tfind <min>      Find all processes with more than min connections.")
 	fmt.Println()
 }
 
