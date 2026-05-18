@@ -1,33 +1,57 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // @return     exit, err
-func ParseCommand(tokens []string) (bool, error) {
-	//TODO:
+func ParseCommand(tokens []string, session *Session) {
+	if len(tokens) == 0 {
+		return
+	}
+	switch strings.ToLower(tokens[0]) {
+	case "help":
+		CliPrintHelp()
+	case "overview":
+		CliOverview(session)
+	case "state":
+		CliGetState(session)
+	case "select":
+		if len(tokens) < 2 {
+			fmt.Printf("\tNot enough args. Usage: select <id>")
+			return
+		}
+		CliSelectSnap(session, tokens[1])
+	case "show":
+	case "graphs":
+	}
+}
 
-	return false, nil
+func CliPrintHelp() {
+
 }
 
 // TODO: overview command
-func CliOverview() {
-	//TODO:
+func CliOverview(session *Session) {
+
 }
 
-func CliGetState(session Session) {
-	//TODO: print run description
-	//TODO: print which snapshot is selected
-
-	//TODO: if none are selected, list available snapshots
-	//TODO: if one is selected, print graph count, node count, connection count + stamp
-}
-
-func (gs GraphSnapshot) GetTotalConnections() int {
-	var connections int
-	for _, p := range gs {
-		connections += len(p.Connections)
+func CliSelectSnap(session *Session, name string) {
+	for i, snap := range session.Snapshots {
+		if snap.Name == name {
+			session.Selected = &session.Snapshots[i]
+			return
+		}
 	}
-	return connections
+	fmt.Printf("\tCurrently selected session has no snapshot %s\n", name)
+}
+
+// Print the current state.
+func CliGetState(session *Session) {
+	session.PrintDescription()
+	fmt.Printf("\t%s\n", line)
+	session.PrintSelected()
 }
 
 func CliGetGraphs(snap Snapshot) {
