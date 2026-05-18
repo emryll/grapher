@@ -3,9 +3,40 @@ package main
 import (
 	"sync"
 	"time"
+	"unsafe"
 )
 
 var DEFAULT_BANNER = 0
+
+type Bitmask uint32
+
+//*===============[ Handle enumeration ]=================
+
+type cHandleEntry struct {
+	Params     unsafe.Pointer
+	ParamsSize uint64
+	Handle     uint32
+	Access     uint32
+	ObjType    uint32
+	Pid        uint32
+}
+
+type HandleEntry struct {
+	Params  map[string]Parameter
+	ObjType uint32
+	Handle  uint32
+	Access  uint32
+	Pid     uint32
+}
+
+type Parameter struct {
+	Name      string
+	Type      uint8
+	Domain    uint8
+	TimeStamp int64
+}
+
+//*===================[ Snapshots ]========================
 
 // describes a capture
 type Session struct {
@@ -14,7 +45,6 @@ type Session struct {
 	Snapshots   []Snapshot
 }
 
-type Bitmask uint32
 type GraphSnapshot map[uint32]*ProcessSnapshot
 
 type Snapshot struct {
@@ -29,7 +59,7 @@ type ProcessSnapshot struct {
 	Name        string
 	ProcessId   uint32
 	ParentName  string
-	ParentId    uint32
+	ParentPid   uint32
 	IsSigned    bool
 	IsElevated  bool
 }
