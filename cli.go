@@ -25,20 +25,53 @@ func ParseCommand(tokens []string, session *Session) bool {
 
 	case "select":
 		if len(tokens) < 2 {
-			fmt.Printf("\tNot enough args. Usage: select <snap>\n")
+			fmt.Printf("\tNot enough args. Usage: select <snap>\n\n")
 			return false
 		}
 		CliSelectSnap(session, tokens[1])
 
 	case "graphs":
 		if session.Selected == nil {
-			fmt.Printf("\tNo snapshot selected.\n\tSelect a snapshot with:\n\t\tselect <name>\n")
+			fmt.Printf("\tNo snapshot selected.\n\tSelect a snapshot with:\n\t\tselect <name>\n\n")
 			return false
 		}
 		CliGetGraphs(session.Selected)
 
+	case "show":
+		if len(tokens) < 3 {
+			fmt.Printf("\tNot enough args. Usage: show <type> <id>\n\n")
+			return false
+		}
+		switch tokens[1] {
+		case "snap", "snapshot":
+			CliShowSnap(tokens[2], session)
+		case "graph":
+			//TODO: check if any snap selected
+		case "process", "ps":
+			//TODO: convert string to pid
+		}
+
 	}
 	return false
+}
+
+func CliShowSnap(name string, session *Session) {
+	var snap *Snapshot
+	for _, s := range session.Snapshots {
+		if s.Name == name {
+			snap = &s
+			break
+		}
+	}
+	if snap == nil {
+		fmt.Printf("\tNo snapshot \"%s\" found in current session.\n\n", name)
+		return
+	}
+
+	fmt.Printf("\t\t: %d separate graphs\n", len(snap.Graphs))
+	fmt.Printf("\t\t: %d nodes total\n", snap.GetNodeCount())
+	fmt.Printf("\t\t: %d connections total\n", snap.GetTotalConnections())
+	fmt.Printf("\t\t: +%dms\n\n", snap.Interval)
 }
 
 func CliPrintHelp() {
@@ -52,6 +85,7 @@ func CliPrintHelp() {
 	fmt.Println("\t\toverview        Get a quick overview about session and selected snap.")
 	fmt.Println("\t\tgraphs          View the graphs in the currently selected snap.")
 	//fmt.Println("\t\tpools           ")
+	fmt.Println()
 }
 
 // TODO: overview command
@@ -59,7 +93,7 @@ func CliOverview(session *Session) {
 	session.PrintDescription()
 	if session.Selected == nil {
 		fmt.Printf("\tNo snapshot selected. %d available\n", len(session.Snapshots))
-		fmt.Printf("\tSelect a snapshot with:\n\t\tselect <name>\n")
+		fmt.Printf("\tSelect a snapshot with:\n\t\tselect <name>\n\n")
 		return
 	}
 
@@ -73,6 +107,7 @@ func CliOverview(session *Session) {
 		fmt.Printf("\t- %s (PID %d)  : %d connections\n",
 			node.Name, node.ProcessId, len(node.Connections))
 	}
+	fmt.Println()
 }
 
 func CliSelectSnap(session *Session, name string) {
@@ -82,7 +117,7 @@ func CliSelectSnap(session *Session, name string) {
 			return
 		}
 	}
-	fmt.Printf("\tCurrently selected session has no snapshot %s\n", name)
+	fmt.Printf("\tCurrently selected session has no snapshot \"%s\"\n\n", name)
 }
 
 // Print the current state.
@@ -96,18 +131,20 @@ func CliGetGraphs(snap *Snapshot) {
 	for i, g := range snap.Graphs {
 		fmt.Printf("\t%d) %d nodes, %d connections\n", i, len(g), g.GetTotalConnections())
 	}
+	fmt.Println()
 }
 
 func CliGetPools(snap Snapshot, rule Traversal) {
 	pools := snap.CreatePools()
 	avg, median := GetAvgAndMedian(pools)
-	for _, pool := range pools {
-		fmt.Printf("\n%s\n\n\tPool %d:\n")
+	for i, pool := range pools {
+		fmt.Printf("\n%s\n\n\tPool %d:\n", line, i)
 		for pid, p := range pool {
 			fmt.Printf("\t*\t%s (PID %d)", p.Name, pid)
 		}
 	}
-	fmt.Printf("\t[*] Created %d pools (%.2f avg size, %.2f median)\n", len(pools), avg, median)
+	fmt.Printf("\n%s\n\n", line)
+	fmt.Printf("\t[*] Created %d pools (%.2f avg size, %.2f median)\n\n", len(pools), avg, median)
 }
 
 func CliGetByConnection(snap Snapshot, min int) {
