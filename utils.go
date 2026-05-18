@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // sum / n
 func GetAvgAndMedian(pools []Pool) (float64, float64) {
@@ -40,7 +42,7 @@ func (s Session) PrintSelected() {
 	fmt.Printf("\t[*] Snapshot %d selected\n", s.Selected.SnapId)
 	fmt.Printf("\t\t: %d separate graphs\n", len(s.Selected.Graphs))
 	fmt.Printf("\t\t: %d nodes total\n", s.Selected.GetNodeCount())
-	fmt.Printf("\t\t: %d connections total\n", s.Selected.GetEdgeCount())
+	fmt.Printf("\t\t: %d connections total\n", s.Selected.GetTotalConnections())
 	fmt.Printf("\t\t: +%dms\n\n", s.Selected.Interval)
 }
 
@@ -48,6 +50,22 @@ func (s Snapshot) GetNodeCount() int {
 	var count int
 	for _, graph := range s.Graphs {
 		count += len(graph)
+	}
+	return count
+}
+
+func (gs GraphSnapshot) GetTotalConnections() int {
+	var connections int
+	for _, p := range gs {
+		connections += len(p.Connections)
+	}
+	return connections
+}
+
+func (s Snapshot) GetTotalConnections() int {
+	var count int
+	for _, graph := range s.Graphs {
+		count += graph.GetTotalConnections()
 	}
 	return count
 }
