@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strings"
 )
 
 // sum / n
@@ -68,4 +71,16 @@ func (s Snapshot) GetTotalConnections() int {
 		count += graph.GetTotalConnections()
 	}
 	return count
+}
+
+func GetInput(reader *bufio.Reader, msg ...string) string {
+	if len(msg) > 0 {
+		fmt.Printf("%s: ", msg)
+	}
+	if reader == nil {
+		reader = bufio.NewReader(os.Stdin)
+	}
+
+	input, _ := reader.ReadString('\n')
+	return strings.TrimSpace(input)
 }

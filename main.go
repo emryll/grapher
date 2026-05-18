@@ -10,9 +10,11 @@ import (
 )
 
 var (
-	r  = color.New(color.FgRed)
-	g  = color.New(color.FgGreen)
-	gb = color.New(color.FgGreen, color.Bold)
+	VERSION = "0.0"
+	r       = color.New(color.FgRed)
+	g       = color.New(color.FgGreen)
+	gb      = color.New(color.FgGreen, color.Bold)
+	line    = "----------------------------------------------------------"
 )
 
 func main() {
@@ -38,19 +40,15 @@ func main() {
 	}
 
 	// begin cli loop
+	reader := bufio.NewReader(os.Stdin)
 	for {
 		gb.Print(" $ ")
-		reader := bufio.NewReader(os.Stdin)
-		command, _ := reader.ReadString('\n')
-		command = strings.TrimSpace(command)
+		command := GetInput(reader)
 		if command == "" {
 			continue
 		}
 		tokens := strings.Fields(command)
-		exit, err := ParseCommand(tokens)
-		if err != nil {
-			fmt.Printf("Invalid command: %v\n", err)
-		}
+		exit := ParseCommand(tokens, &session)
 		if exit {
 			break
 		}
