@@ -60,12 +60,16 @@ func ParseCommand(tokens []string, session *Session) bool {
 			CliViewGraph(session.Selected, index)
 
 		case "process", "ps":
+			if session.Selected == nil {
+				fmt.Printf("\tNo snapshot selected\n\tSelect a snapshot with:\n\t\tselect <name>\n\n")
+				return false
+			}
 			pid, err := strconv.Atoi(tokens[2])
 			if err != nil {
 				fmt.Printf("\tFailed to convert \"%s\" to number\n\t\tError: %v\n\n", tokens[2], err)
 				return false
 			}
-			//TODO:
+			CliViewProcess(session.Selected, uint32(pid))
 		}
 
 	case "find":
@@ -134,6 +138,38 @@ func CliViewGraph(snap *Snapshot, index int) {
 	avg, median := graph.GetAvgAndMedianConnections()
 	fmt.Printf("\t\t: %.1f median connections\n", median)
 	fmt.Printf("\t\t: %.1f avg connections\n\n", avg)
+}
+
+func CliViewProcess(snap *Snapshot, pid uint32) {
+	var process *ProcessSnapshot
+	for _, graph := range snap.Graphs {
+		if ps, exists := graph[pid]; exists {
+			process = ps
+		}
+	}
+
+	if process == nil {
+		fmt.Printf("\tNo process with pid %d found in current snapshot\n\n", pid)
+		return
+	}
+
+	fmt.Printf("\t[*] Process %d (%d connections)\n",
+		process.ProcessId, len(process.Connections))
+	fmt.Printf("\t\t* Path: %s\n", process.Name)
+	fmt.Printf("\t\t* Parent: %s (PID %d)\n", process.ParentName, process.ParentPid)
+	fmt.Printf("\t\t* Signed: ")
+	if process.IsSigned {
+		fmt.Printf("TRUE\n")
+	} else {
+		fmt.Printf("FALSE\n")
+	}
+	fmt.Printf("\t\t* Elevated: ")
+	if process.IsElevated {
+		fmt.Printf("TRUE\n")
+	} else {
+		fmt.Printf("FALSE\n")
+	}
+	fmt.Println()
 }
 
 func CliOverview(session *Session) {
