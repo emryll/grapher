@@ -45,12 +45,29 @@ func ParseCommand(tokens []string, session *Session) bool {
 		}
 		switch tokens[1] {
 		case "snap", "snapshot":
-			CliShowSnap(tokens[2], session)
+			CliViewSnap(tokens[2], session)
+
 		case "graph":
-			//TODO: check if any snap selected
+			if session.Selected == nil {
+				fmt.Printf("\tNo snapshot selected\n\tSelect a snapshot with:\n\t\tselect <name>\n\n")
+				return false
+			}
+			index, err := strconv.Atoi(tokens[2])
+			if err != nil {
+				fmt.Printf("\tFailed to convert \"%s\" to number\n\t\tError: %v\n\n", tokens[2], err)
+				return false
+			}
+			CliViewGraph(session.Selected, index)
+
 		case "process", "ps":
-			//TODO: convert string to pid
+			pid, err := strconv.Atoi(tokens[2])
+			if err != nil {
+				fmt.Printf("\tFailed to convert \"%s\" to number\n\t\tError: %v\n\n", tokens[2], err)
+				return false
+			}
+			//TODO:
 		}
+
 	case "find":
 		if len(tokens) < 2 {
 			fmt.Printf("\tNot enough args. Usage: find <min>\n\n")
@@ -70,7 +87,22 @@ func ParseCommand(tokens []string, session *Session) bool {
 	return false
 }
 
-func CliShowSnap(name string, session *Session) {
+func CliPrintHelp() {
+	fmt.Printf("\tThis is a tool for capturing and analyzing process relationship graphs.\n")
+	fmt.Printf("\t-----------------------------------------------------------------------\n", line)
+	fmt.Println("\tAvailable commands:")
+	fmt.Println("\t\thelp [command]  Show this help message.")
+	fmt.Println("\t\texit            Exit the command line.")
+	fmt.Println("\t\tstate           Show the current state, in regards to snaps.")
+	fmt.Println("\t\tselect <snap>   Select a snapshot for analysis (by name).")
+	fmt.Println("\t\toverview        Get a quick overview about session and selected snap.")
+	fmt.Println("\t\tgraphs          View the graphs in the currently selected snap.")
+	//fmt.Println("\t\tpools           ")
+	fmt.Println("\t\tfind <min>      Find all processes with more than min connections.")
+	fmt.Println()
+}
+
+func CliViewSnap(name string, session *Session) {
 	var snap *Snapshot
 	for _, s := range session.Snapshots {
 		if s.Name == name {
@@ -89,22 +121,21 @@ func CliShowSnap(name string, session *Session) {
 	fmt.Printf("\t\t: +%dms\n\n", snap.Interval)
 }
 
-func CliPrintHelp() {
-	fmt.Printf("\tThis is a tool for capturing and analyzing process relationship graphs.\n")
-	fmt.Printf("\t-----------------------------------------------------------------------\n", line)
-	fmt.Println("\tAvailable commands:")
-	fmt.Println("\t\thelp [command]  Show this help message.")
-	fmt.Println("\t\texit            Exit the command line.")
-	fmt.Println("\t\tstate           Show the current state, in regards to snaps.")
-	fmt.Println("\t\tselect <snap>   Select a snapshot for analysis (by name).")
-	fmt.Println("\t\toverview        Get a quick overview about session and selected snap.")
-	fmt.Println("\t\tgraphs          View the graphs in the currently selected snap.")
-	//fmt.Println("\t\tpools           ")
-	fmt.Println("\t\tfind <min>      Find all processes with more than min connections.")
-	fmt.Println()
+func CliViewGraph(snap *Snapshot, index int) {
+	if index >= len(snap.Graphs) {
+		fmt.Printf("\tThe highest graph index in this snapshot is %d\n\n", len(snap.Graphs)-1)
+		return
+	}
+
+	graph := snap.Graphs[index]
+	fmt.Printf("\t\t: %d nodes total\n", len(graph))
+	fmt.Printf("\t\t: %d connections total\n", graph.GetTotalConnections())
+
+	avg, median := graph.GetAvgAndMedianConnections()
+	fmt.Printf("\t\t: %.1f median connections\n", median)
+	fmt.Printf("\t\t: %.1f avg connections\n\n", avg)
 }
 
-// TODO: overview command
 func CliOverview(session *Session) {
 	session.PrintDescription()
 	if session.Selected == nil {
