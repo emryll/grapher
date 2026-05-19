@@ -4,8 +4,21 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 )
+
+func GetInput(reader *bufio.Reader, msg ...string) string {
+	if len(msg) > 0 {
+		fmt.Printf("%s: ", msg)
+	}
+	if reader == nil {
+		reader = bufio.NewReader(os.Stdin)
+	}
+
+	input, _ := reader.ReadString('\n')
+	return strings.TrimSpace(input)
+}
 
 // sum / n
 func GetAvgAndMedian(pools []Pool) (float64, float64) {
@@ -73,14 +86,19 @@ func (s Snapshot) GetTotalConnections() int {
 	return count
 }
 
-func GetInput(reader *bufio.Reader, msg ...string) string {
-	if len(msg) > 0 {
-		fmt.Printf("%s: ", msg)
+func (s *Snapshot) GetMostWideReaching(amount int) []*ProcessSnapshot {
+	var nodes []*ProcessSnapshot
+	for _, graph := range s.Graphs {
+		for _, node := range graph {
+			nodes = append(nodes, node)
+		}
 	}
-	if reader == nil {
-		reader = bufio.NewReader(os.Stdin)
+	// sort them based on connections (descending)
+	sort.Slice(nodes, func(i, j int) bool {
+		return len(nodes[i].Connections) > len(nodes[j].Connections)
+	})
+	if amount == 0 {
+		return nodes
 	}
-
-	input, _ := reader.ReadString('\n')
-	return strings.TrimSpace(input)
+	return nodes[:amount]
 }
