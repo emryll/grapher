@@ -88,3 +88,11 @@ func (reg *ObjectAccessRegistry) RemoveEntriesByProcess(pid uint32) {
 	}
 	delete(reg.ProcessLookup, pid)
 }
+
+func (entry *AccessEntry) CreateObjectKey() ObjectAccessKey {
+	return ObjectAccessKey{Name: entry.Name, Pid: entry.Pid}
+}
+
+func (entry *AccessEntry) CreateProcessKey() ProcessAccessKey {
+	return ProcessAccessKey{Name: entry.Name, ObjType: entry.Object}
+}
