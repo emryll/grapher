@@ -66,3 +66,25 @@ type ObjectAccessKey struct {
 	Pid  uint32
 	Name string
 }
+
+// Delete all interaction entries under a certain process.
+// This function should be called when a process exits, to cleanup.
+func (reg *ObjectAccessRegistry) RemoveEntriesByProcess(pid uint32) {
+	reg.mu.Lock()
+	defer reg.mu.Unlock()
+
+	if len(reg.ProcessLookup[pid]) == 0 {
+		return
+	}
+
+	// remove entries
+	for psKey, entries := range reg.ProcessLookup[pid] {
+		for _, entry := range entries {
+			objKey := ObjectAccessKey{Name: psKey.Name, Pid: pid}
+			if len(reg.ObjectLookup[uint32(entry.Type)]) > 0 {
+				delete(reg.ObjectLookup[uint32(entry.Type)], objKey)
+			}
+		}
+	}
+	delete(reg.ProcessLookup, pid)
+}
