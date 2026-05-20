@@ -89,6 +89,52 @@ func (reg *ObjectAccessRegistry) RemoveEntriesByProcess(pid uint32) {
 	delete(reg.ProcessLookup, pid)
 }
 
+// Find all corresponding entries based on the acting process.
+// @param  pids    The type of object to be accessed.
+// @param  objs   (optional) Object type filter for entries.
+// @param  names  (optional) Whitelist for object names.
+// @return          All matching object access entries.
+func (reg *ObjectAccessRegistry) FindByProcess(pids []uint32, objs []uint32, names ...string) []*AccessEntry {
+	reg.mu.RLock()
+	defer reg.mu.RUnlock()
+	if len(pids) == 0 {
+		return nil
+	}
+
+	var (
+		entries    []*AccessEntry
+		typeFilter = make(map[uint32]bool)
+		nameFilter = make(map[string]bool)
+		pidFilter  = make(map[uint32]bool)
+	)
+
+	for _, val := range pids {
+		pidFilter[val] = true
+	}
+	for _, val := range objs {
+		typeFilter[val] = true
+	}
+	for _, val := range names {
+		nameFilter[val] = true
+	}
+
+	for _, pid := range pids {
+		if len(reg.ProcessLookup[pid]) == 0 {
+			continue
+		}
+		for objKey, accessEntries := range reg.ProcessLookup[pid] {
+			if len(objs) > 0 && !typeFilter[objKey.ObjType] {
+				continue
+			}
+			if len(names) > 0 && !nameFilter[objKey.Name] {
+				continue
+			}
+			entries = append(entries, accessEntries...)
+		}
+	}
+	return entries
+}
+
 func (entry *AccessEntry) CreateObjectKey() ObjectAccessKey {
 	return ObjectAccessKey{Name: entry.Name, Pid: entry.Pid}
 }
