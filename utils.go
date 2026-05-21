@@ -6,6 +6,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
@@ -159,4 +160,22 @@ func GetProcessExecutable(pid uint32) (string, error) {
 		return "", err
 	}
 	return windows.UTF16ToString(buf[:size]), nil
+}
+
+func GetParentPid(handle *windows.Handle) (uint32, error) {
+	var (
+		pbi    windows.PROCESS_BASIC_INFORMATION
+		retLen uint32
+	)
+	err := windows.NtQueryInformationProcess(
+		handle,
+		windows.ProcessBasicInformation,
+		unsafe.Pointer(&pbi),
+		uint32(unsafe.Sizeof(pbi)),
+		&retLen,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return pbi.InheritedFromUniqueProcessId, nil
 }
