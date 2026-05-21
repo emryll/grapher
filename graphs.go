@@ -67,6 +67,38 @@ type ObjectAccessKey struct {
 	Name string
 }
 
+// Add an interaction to the registry. Updates existing if one exists.
+func (reg *ObjectAccessRegistry) AddEntry(entry AccessEntry, pid uint32) {
+	reg.mu.Lock()
+	defer reg.mu.Unlock()
+	// check that maps are initialized (avoid panic)
+	if reg.ProcessLookup[pid] == nil {
+		reg.ProcessLookup[pid] = make(map[ProcessAccessKey][]*AccessEntry)
+	}
+	if reg.ObjectLookup[entry.Object] == nil {
+		reg.ObjectLookup[entry.Object] = make(map[ObjectAccessKey][]*AccessEntry)
+	}
+
+	objectKey := entry.CreateObjectKey()
+	processKey := entry.CreateProcessKey()
+
+	// check if entry exists, update existing if does
+	entries := reg.FindByProcess([]uint32{pid}, []uint32{entry.Object}, entry.Name)
+	if len(entries) > 0 {
+		for _, ent := range entries {
+			if ent.Handle != entry.Handle {
+				continue
+			}
+			ent.Type |= entry.Type
+			return
+		}
+	}
+
+	e := entry // just to be safe with uniqueness...
+	reg.ProcessLookup[pid][processKey] = append(reg.ProcessLookup[pid][processKey], &e)
+	reg.ObjectLookup[pid][objectKey] = append(reg.ObjectLookup[pid][objectKey], &e)
+}
+
 // Delete all interaction entries under a certain process.
 // This function should be called when a process exits, to cleanup.
 func (reg *ObjectAccessRegistry) RemoveEntriesByProcess(pid uint32) {
