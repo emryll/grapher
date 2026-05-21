@@ -6,6 +6,8 @@ import (
 	"os"
 	"sort"
 	"strings"
+
+	"golang.org/x/sys/windows"
 )
 
 func GetInput(reader *bufio.Reader, msg ...string) string {
@@ -89,7 +91,7 @@ func (s *Session) PrintSelected() {
 		fmt.Println()
 		return
 	}
-	fmt.Printf("\t[*] Snapshot %d selected\n", s.Selected.SnapId)
+	fmt.Printf("\t[*] Snapshot %s selected\n", s.Selected.Name)
 	fmt.Printf("\t\t: %d separate graphs\n", len(s.Selected.Graphs))
 	fmt.Printf("\t\t: %d nodes total\n", s.Selected.GetNodeCount())
 	fmt.Printf("\t\t: %d connections total\n", s.Selected.GetTotalConnections())
@@ -120,7 +122,8 @@ func (s Snapshot) GetTotalConnections() int {
 	return count
 }
 
-func (s *Snapshot) GetMostWideReaching(amount int) []*ProcessSnapshot {
+// Return the n most wide reaching processes. If n is 0, then all, ranked.
+func (s *Snapshot) GetMostWideReaching(n int) []*ProcessSnapshot {
 	var nodes []*ProcessSnapshot
 	for _, graph := range s.Graphs {
 		for _, node := range graph {
@@ -131,8 +134,29 @@ func (s *Snapshot) GetMostWideReaching(amount int) []*ProcessSnapshot {
 	sort.Slice(nodes, func(i, j int) bool {
 		return len(nodes[i].Connections) > len(nodes[j].Connections)
 	})
-	if amount == 0 {
+	if n == 0 {
 		return nodes
 	}
-	return nodes[:amount]
+	return nodes[:n]
+}
+
+func (b Bitmask) HasFlags(flags Bitmask) bool {
+	return (b & flags) == flags
+}
+
+func GetProcessExecutable(pid uint32) (string, error) {
+	hProcess, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
+	if err != nil {
+		return "", err
+	}
+	defer windows.CloseHandle(hProcess)
+
+	var buf [windows.MAX_PATH]uint16
+	size := uint32(len(buf))
+	// flag 0 for Win32 path format
+	err = windows.QueryFullProcessImageName(hProcess, 0, &buf[0], &size)
+	if err != nil {
+		return "", err
+	}
+	return windows.UTF16ToString(buf[:size]), nil
 }
