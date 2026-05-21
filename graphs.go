@@ -67,6 +67,23 @@ type ObjectAccessKey struct {
 	Name string
 }
 
+// Register a tracked interaction to the registry and graph.
+// Before running this you should check that the interaction
+// is something used in the relationship graphing (for efficiency).
+func (entry *AccessEntry) RegisterInteraction() {
+	g_ObjectAccessRegistry.AddEntry(*entry, entry.Pid)
+
+	connections := entry.GetNewConnections(entry.Pid)
+	if len(connections) == 0 {
+		return
+	}
+
+	graph := GetGraph(entry.Pid)
+	for _, newConn := range connections {
+		graph.AddConnection(entry.Type, entry.GetWeight(), entry.Pid, newConn)
+	}
+}
+
 // Add an interaction to the registry. Updates existing if one exists.
 func (reg *ObjectAccessRegistry) AddEntry(entry AccessEntry, pid uint32) {
 	reg.mu.Lock()
