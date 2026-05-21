@@ -198,6 +198,25 @@ func (reg *ObjectAccessRegistry) FindByObject(objectType Bitmask, interaction Bi
 	return result
 }
 
+func (entry *AccessEntry) GetNewConnections(pid uint32) []uint32 {
+	if !entry.IsTrackedInteraction() {
+		return nil
+	}
+
+	var connections []uint32
+	graph := GetGraph(entry.Pid)
+	graph.mu.RLock()
+	defer graph.mu.RUnlock()
+
+	entries := g_ObjectAccessRegistry.FindByObject((Bitmask)(entry.Object), entry.Type, entry.Name)
+	for _, ent := range entries {
+		if graph.Members[entry.Pid].Connections[ent.Pid] == nil {
+			connections = append(connections, ent.Pid)
+		}
+	}
+	return connections
+}
+
 func (entry *AccessEntry) CreateObjectKey() ObjectAccessKey {
 	return ObjectAccessKey{Name: entry.Name, Pid: entry.Pid}
 }
