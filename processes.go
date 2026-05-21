@@ -31,6 +31,36 @@ func ScanProcesses() error {
 	}
 }
 
-func RegisterProcess(entry *windows.ProcessEntry32) {
-	// entry.ProcessID , entry.ParentProcessID , entry.ExeFile
+func (ps *ProcessTable) LookupProcess(pid uint32) *ProcessSnapshot {
+	if ps.Table == nil {
+		return nil
+	}
+	ps.mu.RLock()
+	defer ps.mu.RUnlock()
+	if process, exists := ps.Table[pid]; exists {
+		return process
+	}
+	return nil
+}
+
+func (ps *ProcessTable) AddProcess(process *ProcessSnapshot) {
+	ps.mu.Lock()
+	defer ps.mu.Unlock()
+
+	if ps.Table == nil {
+		ps.Table = make(map[uint32]*ProcessSnapshot)
+	}
+	ps.Table[process.ProcessId] = process
+}
+
+func (ps *ProcessTable) RemoveProcess(pid uint32) {
+	ps.mu.Lock()
+	defer ps.mu.Unlock()
+
+	if ps.Table == nil {
+		return
+	}
+	if _, exists := ps.Table[pid]; exists {
+		delete(ps.Table, pid)
+	}
 }
