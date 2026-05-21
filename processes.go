@@ -31,6 +31,43 @@ func ScanProcesses() error {
 	}
 }
 
+func CreateProcessEntry(pid uint32, parent ...uint32) ProcessSnapshot {
+	entry := ProcessSnapshot{
+		Connections: make(map[uint32]*Connection),
+		IsElevated:  IsElevated(pid),
+		IsSigned:    IsSigned(pid),
+		ProcessId:   pid,
+	}
+
+	path, err := GetProcessExecutable(pid)
+	if err == nil {
+		entry.Name = path
+	}
+
+	if len(parent) > 0 {
+		entry.ParentPid = parent[0]
+	} else {
+		handle, err := windows.OpenProcess(windows.PROCESS_QUERY_INFORMATION, false, pid)
+		if err == nil {
+			defer windows.CloseHandle(handle)
+			ppid, err := GetParentPid(handle)
+			if err == nil {
+				entry.ParentPid = ppid
+			}
+		}
+	}
+
+	parentName, err := GetProcessExecutable(entry.ParentPid)
+	if err == nil {
+		entry.ParentName = parentName
+	}
+	return entry
+}
+
+func CreateProcessTable() *ProcessTable {
+	return &ProcessTable{Table: make(map[uint32]*ProcessSnapshot)}
+}
+
 func (ps *ProcessTable) LookupProcess(pid uint32) *ProcessSnapshot {
 	if ps.Table == nil {
 		return nil
