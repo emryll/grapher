@@ -10,6 +10,17 @@ var DEFAULT_BANNER = 0
 
 type Bitmask uint32
 
+const (
+	OBJECT_TYPE_UNKNOWN   = 0
+	OBJECT_TYPE_PROCESS   = 1
+	OBJECT_TYPE_THREAD    = 2
+	OBJECT_TYPE_FILE      = 3
+	OBJECT_TYPE_SEMAPHORE = 4
+	OBJECT_TYPE_EVENT     = 5
+	OBJECT_TYPE_MUTEX     = 6
+	OBJECT_TYPE_SYMLINK   = 7
+)
+
 //*===============[ Handle enumeration ]=================
 
 type cHandleEntry struct {
@@ -43,11 +54,13 @@ type Session struct {
 	Timestamp   time.Time
 	Description string
 	Snapshots   []Snapshot
+	Selected    *Snapshot // currently selected snap
 }
 
 type GraphSnapshot map[uint32]*ProcessSnapshot
 
 type Snapshot struct {
+	Name   string
 	Graphs []GraphSnapshot
 	//TODO: object access registry
 	Interval uint32 // offset from timestamp in seconds
@@ -77,7 +90,7 @@ type GraphRegistry []*Graph
 
 type ProcessNode struct {
 	ProcessId   uint32
-	Process     *Process
+	Process     *ProcessSnapshot
 	Connections map[uint32]*Connection
 }
 
@@ -89,4 +102,12 @@ type Connection struct {
 type Traversal struct {
 	flags  Bitmask
 	weight int
+}
+
+type AccessEntry struct {
+	Object uint32  // type enum
+	Name   string  // name of object
+	Type   Bitmask // type of interaction
+	Handle uint32
+	Pid    uint32
 }
