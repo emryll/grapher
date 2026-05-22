@@ -180,7 +180,16 @@ func GetParentPid(handle *windows.Handle) (uint32, error) {
 	return pbi.InheritedFromUniqueProcessId, nil
 }
 
-//TODO: IsElevated
+// interpret raw c ansi string as a go string
+func GetAnsiValue(data []byte) string {
+	n := 0
+	for ; n < len(data); n++ {
+		if data[n] == 0 {
+			break // null terminator
+		}
+	}
+	return string(data[:n])
+}
 
 //TODO: IsSigned
 
