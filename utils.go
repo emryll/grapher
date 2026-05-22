@@ -179,3 +179,26 @@ func GetParentPid(handle *windows.Handle) (uint32, error) {
 	}
 	return pbi.InheritedFromUniqueProcessId, nil
 }
+
+//TODO: IsElevated
+
+//TODO: IsSigned
+
+// Provided handle only needs PROCESS_QUERY_LIMITED_INFORMATION
+func IsProcessElevated(hProcess windows.Handle) (bool, error) {
+	var (
+		hToken    windows.Token
+		elevation TOKEN_ELEVATION
+		size      uint32
+	)
+	err := windows.OpenProcessToken(hProcess, windows.TOKEN_QUERY, &hToken)
+	if err != nil {
+		return false, err
+	}
+
+	err = windows.GetTokenInformation(hToken, windows.TokenElevation, (*byte)(unsafe.Pointer(&elevation)), uint32(unsafe.Sizeof(elevation)), &size)
+	if err != nil {
+		return false, err
+	}
+	return elevation.TokenIsElevated != 0, nil
+}

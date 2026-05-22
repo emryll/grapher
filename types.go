@@ -11,6 +11,12 @@ var DEFAULT_BANNER = 0
 type Bitmask uint32
 
 const (
+	SNAP_INTERVAL           = 5  // minutes
+	HANDLE_REFRESH_INTERVAL = 10 // seconds
+	PS_REFRESH_INTERVAL     = 10 // seconds
+)
+
+const (
 	OBJECT_TYPE_UNKNOWN   = 0
 	OBJECT_TYPE_PROCESS   = 1
 	OBJECT_TYPE_THREAD    = 2
@@ -42,6 +48,11 @@ const (
 	FILE_WRITE       = 1 << 2
 	PS_CREATE_THREAD = 1 << 2
 )
+
+// win32 struct for GetTokenInformation
+type TOKEN_ELEVATION struct {
+	TokenIsElevated uint32
+}
 
 //*===============[ Handle enumeration ]=================
 
