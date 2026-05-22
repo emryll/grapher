@@ -2,37 +2,52 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"os"
+	"time"
 )
 
-func BeginCapture() error {
+func BeginCapture(max int) error {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter path to save capture in (ENTER for default): ")
-	path, err := reader.ReadString('\n')
-	if err != nil {
-		return err
-	}
+	path := GetInput(reader, "Enter path to save capture in (skip for default)")
 
 	//TODO: check if path is valid
 	//TODO: if it doesnt exist, ask to create
 
-	//TODO: ask description
-	fmt.Print("Set description for capture: ")
-	description, err := reader.ReadString('\n')
-	if err != nil {
-		return err
-	}
-
 	var session Session
-	session.Description = description
+	session.Description = GetInput(reader, "Set description for capture")
+	session.Timestamp = time.Now()
 
+	g_ProcessTable = CreateProcessTable()
+	//TODO: start building graph
+
+	//* capture loop
+	snapTicker := time.NewTicker(time.Duration(SNAP_INTERVAL) * time.Minute)
+	handleTicker := time.NewTicker(time.Duration(HANDLE_REFRESH_INTERVAL) * time.Second)
+	psTicker := time.NewTicker(time.Duration(PS_REFRESH_INTERVAL) * time.Second)
+	for {
+		if len(session.Snapshots) >= max {
+			break
+		}
+		select {
+		case <-snapTicker.C:
+			relativeTime := time.Now().UnixMilli() - session.Timestamp.UnixMilli()
+			TakeSnapshot(relativeTime)
+		case <-psTicker.C:
+			ScanProcesses()
+		case <-handleTicker.C:
+			ParseHandleTable()
+		}
+	}
+	session.WriteToDisk(path)
+	return nil
 }
 
 func LoadSession(dir string) (Session, error) {
-
+	// - traverse dir
+	// -
 }
 
+// interval is the relative offset from beginning of capture (seconds)
 func (gr GraphRegistry) TakeSnapshot(interval int) Snapshot {
 	var snap Snapshot
 	for _, graph := range gr {
