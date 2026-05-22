@@ -21,6 +21,28 @@ const (
 	OBJECT_TYPE_SYMLINK   = 7
 )
 
+const (
+	PARAMETER_ANSISTRING    = 1
+	PARAMETER_ASTR_ARRAY    = 10
+	PARAMETER_UINT32        = 2
+	PARAMETER_UINT32_ARRAY  = 20
+	PARAMETER_UINT64        = 3
+	PARAMETER_UINT64_ARRAY  = 30
+	PARAMETER_BOOLEAN       = 4
+	PARAMETER_BOOLEAN_ARRAY = 40
+	PARAMETER_POINTER       = 5
+	PARAMETER_POINTER_ARRAY = 50
+	PARAMETER_BYTES         = 7
+)
+
+const (
+	ANY_ACCESS       = 1 << 0
+	FILE_READ        = 1 << 1
+	PS_READ_MEM      = 1 << 1
+	FILE_WRITE       = 1 << 2
+	PS_CREATE_THREAD = 1 << 2
+)
+
 //*===============[ Handle enumeration ]=================
 
 type cHandleEntry struct {
@@ -36,15 +58,15 @@ type HandleEntry struct {
 	Params  map[string]Parameter
 	ObjType uint32
 	Handle  uint32
-	Access  uint32
+	Access  Bitmask
 	Pid     uint32
 }
 
 type Parameter struct {
-	Name      string
-	Type      uint8
-	Domain    uint8
-	TimeStamp int64
+	Name   string
+	Type   uint8
+	Domain uint8
+	Buffer []byte
 }
 
 //*===================[ Snapshots ]========================
@@ -75,6 +97,7 @@ type ProcessSnapshot struct {
 	ParentPid   uint32
 	IsSigned    bool
 	IsElevated  bool
+	Graph       *Graph
 }
 
 //*=========================[ Graphing ]===========================
@@ -110,4 +133,11 @@ type AccessEntry struct {
 	Type   Bitmask // type of interaction
 	Handle uint32
 	Pid    uint32
+}
+
+var g_ProcessTable *ProcessTable
+
+type ProcessTable struct {
+	mu    sync.RWMutex
+	Table map[uint32]*ProcessSnapshot
 }
