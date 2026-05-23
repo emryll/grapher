@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -34,32 +35,50 @@ func ScanProcesses() error {
 func CreateProcessEntry(pid uint32, parent ...uint32) ProcessSnapshot {
 	entry := ProcessSnapshot{
 		Connections: make(map[uint32]*Connection),
-		IsElevated:  IsElevated(pid),
 		IsSigned:    IsSigned(pid),
 		ProcessId:   pid,
 	}
 
-	path, err := GetProcessExecutable(pid)
-	if err == nil {
-		entry.Name = path
+	var handleFound bool
+	handle, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
+	if err != nil {
+		fmt.Printf("[WARNING] Failed to open process %d: %v\n", pid, err)
+	} else {
+		handleFound = true
+		defer windows.CloseHandle(handle)
 	}
 
-	if len(parent) > 0 {
-		entry.ParentPid = parent[0]
-	} else {
-		handle, err := windows.OpenProcess(windows.PROCESS_QUERY_INFORMATION, false, pid)
+	if handleFound {
+		elevated, err := IsProcessElevated(handle)
 		if err == nil {
-			defer windows.CloseHandle(handle)
-			ppid, err := GetParentPid(handle)
-			if err == nil {
-				entry.ParentPid = ppid
-			}
+			entry.IsElevated = elevated
+		}
+		path, err := GetProcessExecutable(handle)
+		if err == nil {
+			entry.Name = path
 		}
 	}
 
-	parentName, err := GetProcessExecutable(entry.ParentPid)
-	if err == nil {
-		entry.ParentName = parentName
+	var parentFound bool
+	if len(parent) > 0 {
+		entry.ParentPid = parent[0]
+		parentFound = true
+	} else if handleFound {
+		ppid, err := GetParentPid(handle)
+		if err == nil {
+			entry.ParentPid = ppid
+			parentFound = true
+		}
+	}
+
+	if parentFound {
+		parentHandle, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, entry.ParentPid)
+		if err == nil {
+			parentName, err := GetProcessExecutable(parentHandle)
+			if err == nil {
+				entry.ParentName = parentName
+			}
+		}
 	}
 	return entry
 }
