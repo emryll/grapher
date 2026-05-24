@@ -25,6 +25,7 @@ const (
 	OBJECT_TYPE_EVENT     = 5
 	OBJECT_TYPE_MUTEX     = 6
 	OBJECT_TYPE_SYMLINK   = 7
+	OBJECT_TYPE_PIPE      = 8
 )
 
 const (
@@ -112,6 +113,15 @@ type ProcessSnapshot struct {
 }
 
 //*=========================[ Graphing ]===========================
+
+const (
+	PG_DIRECT_RELATIVE = 1 << 0
+	PG_IPC_CHANNEL     = 1 << 1
+	PG_SAME_PS_ACCESS  = 1 << 2
+	PG_SAME_FILE_OP    = 1 << 4
+	PG_SAME_FILE_WRITE = 1 << 5
+	PG_SAME_FILE_READ  = 1 << 6
+)
 
 type Pool map[uint32]*ProcessSnapshot
 
