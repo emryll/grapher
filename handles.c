@@ -9,6 +9,8 @@
 //?   to build a basic relationship graph. This is implemented in C for ease.   |
 //?=============================================================================+
 
+static NQO NtQueryObject = NULL;
+
 // Get the global handle table via NtQuerySystemInformation. It also gets object information,
 // which calls NtQueryObject. Note that this call is quite heavy, currently typically taking 1000ms.
 // Caller must free returned handle table with FreeHandleTable. NULL is returned upon failure.
@@ -170,8 +172,27 @@ DWORD GetHandleObjectType(HANDLE hObject) {
     if (wcscmp(typeInfo->TypeName.Buffer, L"Thread") == 0) {
         type = TYPE_THREAD;
     }
+    if (wcscmp(typeInfo->TypeName.Buffer, L"File") == 0) {
+        //TODO: Check if it is a pipe
+        type = TYPE_FILE;
+    }
+    if (wcscmp(typeInfo->TypeName.Buffer, L"Event") == 0) {
+        type = TYPE_EVENT;
+    }
+    if (wcscmp(typeInfo->TypeName.Buffer, L"Semaphore") == 0) {
+        type = TYPE_SEMAPHORE;
+    }
+    if (wcscmp(typeInfo->TypeName.Buffer, L"Section") == 0) {
+        type = TYPE_SECTION;
+    }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Token") == 0) {
         type = TYPE_TOKEN;
+    }
+    if (wcscmp(typeInfo->TypeName.Buffer, L"SymbolicLink") == 0) {
+        type = TYPE_SYMLINK;
+    }
+    if (wcscmp(typeInfo->TypeName.Buffer, L"Directory") == 0) {
+        type = TYPE_DIRECTORY;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Device") == 0) {
         type = TYPE_DEVICE;
@@ -183,17 +204,11 @@ DWORD GetHandleObjectType(HANDLE hObject) {
         type = TYPE_DRIVER;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"TpWorkerFactory") == 0) {
-        type = TYPE_DESKTOP;
+        type = TYPE_WORKER_FACTORY;
     }
-
-    //TODO: Section
-    //TODO: DebugObject
-    //TODO: Event
-    //TODO: Directory
-    //TODO: File
-    //TODO: Semaphore
-    //TODO: Key
-    //TODO: SymbolicLink
+    if (wcscmp(typeInfo->TypeName.Buffer, L"DebugObject") == 0) {
+        type = TYPE_DBG_OBJECT;
+    }
 
     free(typeInfo);
     return type;
