@@ -47,8 +47,8 @@ HANDLE_ENTRY* GetGlobalHandleTable(size_t* handleCount) {
         }
 
         HANDLE hObject = NULL;
-        // Handles are just indexes to per-process handle table. Thats why you need to duplicate, so you can pass to NtQueryObject.
         //TODO: what are the minimum required access rights?
+        //* Duplicate handle to query information about the object
         if (!DuplicateHandle(hProcess, (HANDLE)(DWORD_PTR)handleInfo.HandleValue, GetCurrentProcess(),
                 &hObject, STANDARD_RIGHTS_REQUIRED | GENERIC_READ, FALSE, 0)) {
             DWORD err = GetLastError();
@@ -129,6 +129,10 @@ BYTE* GetHandleParameters(HANDLE hObject, DWORD objectType, size_t* paramsSize) 
             *paramsSize = pidParamSize + tidParamSize;
             break;
         }
+        case OBJECT_TYPE_FILE:
+
+        //TODO: add rest of tracked types
+
         /*// owning process path
             char path[MAX_PATH];
             DWORD pathLen;
@@ -167,47 +171,50 @@ DWORD GetHandleObjectType(HANDLE hObject) {
 
     DWORD type = TYPE_UNKNOWN;
     if (wcscmp(typeInfo->TypeName.Buffer, L"Process") == 0) {
-        type = TYPE_PROCESS;
+        type = OBJECT_TYPE_PROCESS;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Thread") == 0) {
-        type = TYPE_THREAD;
+        type = OBJECT_TYPE_THREAD;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"File") == 0) {
         //TODO: Check if it is a pipe
-        type = TYPE_FILE;
+        type = OBJECT_TYPE_FILE;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Event") == 0) {
-        type = TYPE_EVENT;
+        type = OBJECT_TYPE_EVENT;
+    }
+    if (wcscmp(typeInfo->TypeName.Buffer, L"Mutant") == 0) {
+        type = OBJECT_TYPE_MUTEX;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Semaphore") == 0) {
-        type = TYPE_SEMAPHORE;
+        type = OBJECT_TYPE_SEMAPHORE;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Section") == 0) {
-        type = TYPE_SECTION;
+        type = OBJECT_TYPE_SECTION;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Token") == 0) {
-        type = TYPE_TOKEN;
+        type = OBJECT_TYPE_TOKEN;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"SymbolicLink") == 0) {
-        type = TYPE_SYMLINK;
+        type = OBJECT_TYPE_SYMLINK;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Directory") == 0) {
-        type = TYPE_DIRECTORY;
+        type = OBJECT_TYPE_DIRECTORY;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Device") == 0) {
-        type = TYPE_DEVICE;
+        type = OBJECT_TYPE_DEVICE;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Desktop") == 0) {
-        type = TYPE_DESKTOP;
+        type = OBJECT_TYPE_DESKTOP;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Driver") == 0) {
-        type = TYPE_DRIVER;
+        type = OBJECT_TYPE_DRIVER;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"TpWorkerFactory") == 0) {
-        type = TYPE_WORKER_FACTORY;
+        type = OBJECT_TYPE_WORKER_FACTORY;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"DebugObject") == 0) {
-        type = TYPE_DBG_OBJECT;
+        type = OBJECT_TYPE_DBG_OBJECT;
     }
 
     free(typeInfo);
