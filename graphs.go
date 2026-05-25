@@ -74,7 +74,7 @@ func (g *Graph) RemoveConnection(node1 uint32, node2 uint32) {
 		// if there is nothing connecting this process
 		// to the current graph, then move it to new one
 		if len(p1.Connections) == 0 {
-			CreateNewGraph(g_GraphRegistry, p1)
+			g_GraphRegistry.CreateNewGraph(p1)
 		}
 	}
 
@@ -83,8 +83,44 @@ func (g *Graph) RemoveConnection(node1 uint32, node2 uint32) {
 		// if there is nothing connecting this process
 		// to the current graph, then move it to new one
 		if len(p2.Connections) == 0 {
-			CreateNewGraph(g_GraphRegistry, p2)
+			g_GraphRegistry.CreateNewGraph(p2)
 		}
+	}
+}
+
+// remove weight or type from connection IN BOTH NODES.
+// if the connection doesnt exist, or they dont have the flags, no-op
+func (g *Graph) StripConnection(flags Bitmask, weight int, node1 uint32, node2 uint32) {
+	var (
+		node1Remove bool
+		node2Remove bool
+	)
+	if g.Members[node1] != nil {
+		if _, exists := g.Members[node1].Connections[node2]; exists {
+			conn := g.Members[node1].Connections[node2].Strip(flags, weight)
+			if conn == 0 { // no connection type left
+				node1Remove = true
+			}
+		}
+	} else {
+		node1Remove = true
+	}
+	if g.Members[node2] != nil {
+		if _, exists := g.Members[node2].Connections[node1]; exists {
+			conn := g.Members[node2].Connections[node1].Strip(flags, weight)
+			if conn == 0 {
+				node2Remove = true
+			}
+		}
+	} else {
+		node2Remove = true
+	}
+
+	// a connection could be one-way,
+	// so it is fully removed only if
+	// there is no connection at all.
+	if node1Remove && node2Remove {
+		g.RemoveConnection(node1, node2)
 	}
 }
 
