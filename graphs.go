@@ -64,6 +64,30 @@ func (g *Graph) AddConnection(flags Bitmask, weight int, node1 uint32, node2 uin
 	g.Members[node2].Connections[node1].Expand(flags, weight)
 }
 
+// no-op if connection does not exist
+func (g *Graph) RemoveConnection(node1 uint32, node2 uint32) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	if p1, exists := g.Members[node1]; exists && p1 != nil {
+		delete(p1.Connections, node2)
+		// if there is nothing connecting this process
+		// to the current graph, then move it to new one
+		if len(p1.Connections) == 0 {
+			CreateNewGraph(g_GraphRegistry, p1)
+		}
+	}
+
+	if p2, exists := g.Members[node2]; exists && p2 != nil {
+		delete(p2.Connections, node1)
+		// if there is nothing connecting this process
+		// to the current graph, then move it to new one
+		if len(p2.Connections) == 0 {
+			CreateNewGraph(g_GraphRegistry, p2)
+		}
+	}
+}
+
 // Create new graph and add it to registry. Start empty or define nodes
 func (gr GraphRegistry) CreateNewGraph(nodes ...*ProcessNode) *Graph {
 	var id int
