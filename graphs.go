@@ -206,8 +206,38 @@ func (snap Snapshot) CreatePools() []Pool {
 	return pools
 }
 
-func (g *GraphSnapshot) CreatePools() []Pool {
-	//TODO: traverse graph
+func (graph GraphSnapshot) CreatePools(filter Traversal) []Pool {
+	var (
+		visited = make(map[uint32]bool)
+		pools   []Pool
+	)
+
+	for pid := range graph {
+		if visited[pid] {
+			continue
+		}
+		// breadth first search
+		pool := make(Pool)
+		queue := []uint32{pid}
+		visited[pid] = true
+
+		for len(queue) > 0 {
+			curr := queue[0]
+			queue = queue[1:]
+
+			node := graph[curr]
+			pool[curr] = node
+
+			for outPid, conn := range node.Connections {
+				if !visited[outPid] && conn.Passes(filter) {
+					visited[outPid] = true
+					queue = append(queue, outPid)
+				}
+			}
+		}
+		pools = append(pools, pool)
+	}
+	return pools
 }
 
 func GetGraph(pid uint32) *Graph {
