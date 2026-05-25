@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"sort"
@@ -21,23 +22,6 @@ func GetInput(reader *bufio.Reader, msg ...string) string {
 
 	input, _ := reader.ReadString('\n')
 	return strings.TrimSpace(input)
-}
-
-// sum / n
-func GetAvgAndMedian(pools []Pool) (float64, float64) {
-	var (
-		total  int
-		median float64
-		avg    float64
-	)
-	//TODO: sort pool by length
-	for i, pool := range pools {
-
-		//TODO: check if i is in middle
-	}
-	avg = float64(total / len(pools))
-
-	return avg, median
 }
 
 func (g GraphSnapshot) GetAvgAndMedianConnections() (float32, float32) {
@@ -145,24 +129,18 @@ func (b Bitmask) HasFlags(flags Bitmask) bool {
 	return (b & flags) == flags
 }
 
-func GetProcessExecutable(pid uint32) (string, error) {
-	hProcess, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
-	if err != nil {
-		return "", err
-	}
-	defer windows.CloseHandle(hProcess)
-
+func GetProcessExecutable(handle windows.Handle) (string, error) {
 	var buf [windows.MAX_PATH]uint16
 	size := uint32(len(buf))
 	// flag 0 for Win32 path format
-	err = windows.QueryFullProcessImageName(hProcess, 0, &buf[0], &size)
+	err := windows.QueryFullProcessImageName(handle, 0, &buf[0], &size)
 	if err != nil {
 		return "", err
 	}
 	return windows.UTF16ToString(buf[:size]), nil
 }
 
-func GetParentPid(handle *windows.Handle) (uint32, error) {
+func GetParentPid(handle windows.Handle) (uint32, error) {
 	var (
 		pbi    windows.PROCESS_BASIC_INFORMATION
 		retLen uint32
@@ -210,4 +188,21 @@ func IsProcessElevated(hProcess windows.Handle) (bool, error) {
 		return false, err
 	}
 	return elevation.TokenIsElevated != 0, nil
+}
+
+func ParseCaptureFlags(tokens []string) CaptureConfig {
+	// -h handle refresh interval
+	// -p process refresh interval
+	// -m max snaps
+	// -t capture timeout
+	var config CaptureConfig
+	fs := flag.NewFlagSet("capture", flag.ExitOnError)
+
+	fs.IntVar(&config.HandleInterval, "h", HANDLE_REFRESH_INTERVAL, "handle refresh interval")
+	fs.IntVar(&config.PsInterval, "p", PS_REFRESH_INTERVAL, "process refresh interval")
+	fs.IntVar(&config.Timeout, "t", DEFAULT_TIMEOUT, "capture timeout")
+	fs.IntVar(&config.MaxSnaps, "m", DEFAULT_MAX_SNAPS, "max snapshots")
+
+	fs.Parse(tokens)
+	return config
 }

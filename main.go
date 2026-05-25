@@ -14,7 +14,7 @@ var (
 	r       = color.New(color.FgRed)
 	g       = color.New(color.FgGreen)
 	gb      = color.New(color.FgGreen, color.Bold)
-	line    = "----------------------------------------------------------"
+	line    = "---------------------------------------------------------------"
 )
 
 func main() {
@@ -24,7 +24,8 @@ func main() {
 		return
 	}
 	if strings.EqualFold(os.Args[1], "capture") {
-		err := BeginCapture()
+		config := ParseCaptureFlags(os.Args[1:])
+		err := config.BeginCapture()
 		if err != nil {
 			r.Print("\t[ERROR] ")
 			fmt.Printf("%v\n", err)
