@@ -26,6 +26,34 @@ func (c *Connection) Passes(rule Traversal) bool {
 	return c.Type.HasFlags(rule.flags) && c.Weight >= rule.weight
 }
 
+// Create new graph and add it to registry. Start empty or define nodes
+func CreateNewGraph(gr GraphRegistry, nodes ...*ProcessNode) *Graph {
+	var id int
+	for {
+		id = ID_COUNTER
+		if g := gr.Lookup(id); g == nil {
+			break
+		}
+	}
+
+	graph := Graph{
+		id:      id,
+		Members: make(map[uint32]*ProcessNode),
+	}
+
+	for _, node := range nodes {
+		graph.Members[node.ProcessId] = node
+	}
+
+	// should you check that connections are valid?
+	// it adds slight overhead, but without it nodes
+	// could be passed even if they dont form a coherent
+	// graph, i.e. there are "islands", not all are connected.
+
+	gr.Add(&graph)
+	return &graph
+}
+
 func (snap Snapshot) CreatePools() []Pool {
 	var pools []Pool
 	for _, g := range snap.Graphs {
@@ -36,6 +64,14 @@ func (snap Snapshot) CreatePools() []Pool {
 
 func (g *GraphSnapshot) CreatePools() []Pool {
 	//TODO: traverse graph
+}
+
+func GetGraph(pid uint32) *Graph {
+	process := g_ProcessTable.LookupProcess(pid)
+	if process == nil {
+		return nil
+	}
+	return process.Graph
 }
 
 //*====================[ Object Access Lookup ]===================
