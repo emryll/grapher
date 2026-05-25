@@ -112,6 +112,14 @@ type ProcessSnapshot struct {
 	Graph       *Graph
 }
 
+type CaptureConfig struct {
+	MaxSnaps       int
+	SnapInterval   int // seconds
+	HandleInterval int // seconds
+	PsInterval     int // seconds
+	Timeout        int // minutes
+}
+
 //*=========================[ Graphing ]===========================
 
 const (
@@ -126,11 +134,12 @@ const (
 type Pool map[uint32]*ProcessSnapshot
 
 type Graph struct {
+	id      int
 	mu      sync.RWMutex
 	Members map[uint32]*ProcessNode
 }
 
-type GraphRegistry []*Graph
+type GraphRegistry map[int]*Graph
 
 type ProcessNode struct {
 	ProcessId   uint32
@@ -154,6 +163,7 @@ type AccessEntry struct {
 	Type   Bitmask // type of interaction
 	Handle uint32
 	Pid    uint32
+	Params map[string]Parameter // extended object info
 }
 
 var g_ProcessTable *ProcessTable

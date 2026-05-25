@@ -27,7 +27,7 @@ func (c *Connection) Passes(rule Traversal) bool {
 }
 
 // Create new graph and add it to registry. Start empty or define nodes
-func CreateNewGraph(gr GraphRegistry, nodes ...*ProcessNode) *Graph {
+func (gr GraphRegistry) CreateNewGraph(nodes ...*ProcessNode) *Graph {
 	var id int
 	for {
 		id = ID_COUNTER
@@ -52,6 +52,21 @@ func CreateNewGraph(gr GraphRegistry, nodes ...*ProcessNode) *Graph {
 
 	gr.Add(&graph)
 	return &graph
+}
+
+func (r GraphRegistry) Add(graph *Graph) {
+	r[graph.id] = graph
+}
+
+func (r GraphRegistry) Remove(graph *Graph) {
+	delete(r, graph.id)
+}
+
+func (r GraphRegistry) Lookup(id int) *Graph {
+	if graph, exists := r[id]; exists {
+		return graph
+	}
+	return nil
 }
 
 func (snap Snapshot) CreatePools() []Pool {
