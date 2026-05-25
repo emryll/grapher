@@ -124,6 +124,37 @@ func (g *Graph) StripConnection(flags Bitmask, weight int, node1 uint32, node2 u
 	}
 }
 
+// Merge another graph into this graph.
+// This will delete the other graph with merge.
+// This method should be used on the larger graph.
+func (g *Graph) Merge(other *Graph, graphRegistry GraphRegistry) {
+	g.mu.Lock()
+	other.mu.Lock()
+	defer g.mu.Unlock()
+	defer other.mu.Unlock()
+
+	var (
+		larger  *Graph
+		smaller *Graph
+	)
+	// merge smaller into larger for efficiency
+	if len(g.Members) > len(other.Members) {
+		larger = g
+		smaller = other
+	} else {
+		larger = other
+		smaller = g
+	}
+
+	for pid, node := range smaller.Members {
+		larger.Members[pid] = node
+		SetGraph(pid, larger)
+	}
+	if graphRegistry != nil {
+		graphRegistry.Remove(smaller)
+	}
+}
+
 // Create new graph and add it to registry. Start empty or define nodes
 func (gr GraphRegistry) CreateNewGraph(nodes ...*ProcessNode) *Graph {
 	var id int
