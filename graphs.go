@@ -8,6 +8,8 @@ var (
 	g_GraphRegistry        GraphRegistry
 )
 
+//*========================[ Relationship Graphing ]===========================
+
 // Returns resulting bitmask after stripping
 func (c *Connection) Strip(flags Bitmask, weight int) Bitmask {
 	c.Weight -= weight
@@ -24,6 +26,42 @@ func (c *Connection) Expand(flags Bitmask, weight int) {
 // Check if connection passes given traversal rule
 func (c *Connection) Passes(rule Traversal) bool {
 	return c.Type.HasFlags(rule.flags) && c.Weight >= rule.weight
+}
+
+// Add a graph connection between two processes, or update existing.
+// Weight is incremented by the specified amount and flags are appended.
+func (g *Graph) AddConnection(flags Bitmask, weight int, node1 uint32, node2 uint32) {
+	graph1 := GetGraph(node1)
+	graph2 := GetGraph(node2)
+	// merge if they are different graphs
+	if graph1 != nil && graph2 != nil && graph1 != graph2 {
+		if graph1 == g {
+			g.Merge(graph2, g_GraphRegistry)
+		} else if graph2 == g {
+			g.Merge(graph1, g_GraphRegistry)
+		} else {
+			graph1.Merge(graph2, g_GraphRegistry)
+		}
+	}
+
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	// make sure maps are allocated (avoid panic)
+	if g.Members[node1] == nil {
+		g.Members[node1] = &ProcessNode{
+			ProcessId:   node1,
+			Connections: make(map[uint32]*Connection),
+		}
+	}
+	if g.Members[node2] == nil {
+		g.Members[node2] = &ProcessNode{
+			ProcessId:   node2,
+			Connections: make(map[uint32]*Connection),
+		}
+	}
+
+	g.Members[node1].Connections[node2].Expand(flags, weight)
+	g.Members[node2].Connections[node1].Expand(flags, weight)
 }
 
 // Create new graph and add it to registry. Start empty or define nodes
