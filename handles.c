@@ -174,9 +174,7 @@ BYTE* GetHandleParameters(HANDLE hObject, DWORD objectType, size_t* paramsSize) 
 }
 
 DWORD GetHandleObjectType(HANDLE hObject) {
-    if (NtQueryObject == NULL) {
-        NtQueryObject = (NQO)GetProcAddress(GetModuleHandle("ntdll"), "NtQueryObject");
-    }
+    LazyLoadNQO(); // NtQueryObject is not in the headers, so it's manually resolved
     DWORD bufSize = sizeof(PUBLIC_OBJECT_TYPE_INFORMATION);
     PUBLIC_OBJECT_TYPE_INFORMATION* typeInfo = (PUBLIC_OBJECT_TYPE_INFORMATION*)malloc(bufSize);
     NTSTATUS status = NtQueryObject(hObject, ObjectTypeInformation, (PVOID)typeInfo, bufSize, &bufSize);
@@ -195,7 +193,7 @@ DWORD GetHandleObjectType(HANDLE hObject) {
         return TYPE_UNKNOWN;
     }
 
-    DWORD type = TYPE_UNKNOWN;
+    DWORD type = OBJECT_TYPE_UNKNOWN;
     if (wcscmp(typeInfo->TypeName.Buffer, L"Process") == 0) {
         type = OBJECT_TYPE_PROCESS;
     }
@@ -395,4 +393,9 @@ char* GetObjectName(HANDLE hObject) {
         return NULL;
     }
     return NULL;
+}
+
+void LazyLoadNQO() {
+    if (NtQueryObject != NULL) return;
+    NtQueryObject = GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryObject");
 }
