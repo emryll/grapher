@@ -157,9 +157,26 @@ BYTE* GetHandleParameters(HANDLE hObject, DWORD objectType, size_t* paramsSize) 
             parameters = BuildParameter(paramsSize, PARAMETER_ANSISTRING, "Name", name);
             free(name);
             break;
-        //TODO: Semaphore
-        //TODO: Symlink
+        case OBJECT_TYPE_SYMLINK:
+            ULONG returnLength = 0;
+            const ULONG bufferSize = 0x1000;
+            BYTE buffer[bufferSize] = {0};
 
+            NTSTATUS status = NtQuerySymbolicLinkObject(hObject, ucTarget, &returnLength);
+            if (status != STATUS_SUCCESS) {
+                printf("[ERROR] Failed to query symlink info, NTSTATUS: 0x%x\n", status);
+                break;
+            }
+            if (returnLength == 0 || ucTarget->Length == 0) break;
+            char* target = ConvertUnicodeToAnsi(ucTarget);
+            if (target == NULL) {
+                printf("[ERROR] Failed to convert UNICODE_STRING to ansi\n");
+                break;
+            }
+            
+            parameters = BuildParameter(paramsSize, PARAMETER_ANSISTRING, "Name", target);
+            free(target);
+            break;
         /*
         case TYPE_TOKEN:
         // owning process
