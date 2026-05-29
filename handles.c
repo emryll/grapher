@@ -148,6 +148,7 @@ BYTE* GetHandleParameters(HANDLE hObject, DWORD objectType, size_t* paramsSize) 
             parameters = BuildParameter(paramsSize, PARAMETER_ANSISTRING, "Name", path);
             break;
  
+        case OBJECT_TYPE_EVENT:
         case OBJECT_TYPE_MUTEX:
             char* name = GetObjectName(hObject);
             if (name == NULL) break;
