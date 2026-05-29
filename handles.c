@@ -148,8 +148,14 @@ BYTE* GetHandleParameters(HANDLE hObject, DWORD objectType, size_t* paramsSize) 
             parameters = BuildParameter(paramsSize, PARAMETER_ANSISTRING, "Name", path);
             break;
  
+        case OBJECT_TYPE_MUTEX:
+            char* name = GetObjectName(hObject);
+            if (name == NULL) break;
+
+            parameters = BuildParameter(paramsSize, PARAMETER_ANSISTRING, "Name", name);
+            free(name);
+            break;
         //TODO: Semaphore
-        //TODO: Mutex
         //TODO: Event
         //TODO: Symlink
 
@@ -358,4 +364,35 @@ BYTE* BuildParameter(size_t* totalSize, DWORD type, const char* name, ...) {
 
     free(header);
     return buf;
+}
+
+char* GetObjectName(HANDLE hObject) {
+    LazyLoadNQO();
+
+    // buffer for object name infoSize
+    const ULONG bufferSize = 0x1000;
+    BYTE buffer[bufferSize] = {0};
+    ULONG returnLength = 0;
+
+    NTSTATUS status = NtQueryObject(
+        hObject,
+        ObjectNameInformation,
+        buffer,
+        bufferSize,
+        &returnLength,
+    );
+    if (status != STATUS_SUCCESS) {
+        printf("[ERROR] Failed to query name of object, NTSTATUS: %d\n", status);
+        return NULL;
+    }
+
+    PUNICODE_STRING ucName = (PUNICODE_STRING)buffer;
+    if (ucName->Length == 0) return NULL;
+
+    char* ansiName = ConvertUnicodeToAnsi(ucName);
+    if (ansiName == NULL) {
+        printf("[ERROR] Failed to convert name from UNICODE_STRING to ansi\n");
+        return NULL;
+    }
+    return NULL;
 }
