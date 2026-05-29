@@ -150,6 +150,7 @@ BYTE* GetHandleParameters(HANDLE hObject, DWORD objectType, size_t* paramsSize) 
  
         case OBJECT_TYPE_EVENT:
         case OBJECT_TYPE_MUTEX:
+        case OBJECT_TYPE_SEMAPHORE:
             char* name = GetObjectName(hObject);
             if (name == NULL) break;
 
