@@ -130,8 +130,20 @@ BYTE* GetHandleParameters(HANDLE hObject, DWORD objectType, size_t* paramsSize) 
             break;
         }
         case OBJECT_TYPE_FILE:
+            char path[1026];
+            DWORD retLen = GetFinalPathNameByHandleA(hObject, path, 1026, 0);
+            if (retLen == 0) {
+                printf("[ERROR] Failed to get path of file, error code: %d\n", GetLastError());
+                return parameters;
+            }
+            parameters = BuildParameter(paramsSize, PARAMETER_ANSISTRING, "Name", path);
+            break;
+        case OBJECT_TYPE_PIPE:
 
-        //TODO: add rest of tracked types
+        //TODO: Semaphore
+        //TODO: Mutex
+        //TODO: Event
+        //TODO: Symlink
 
         /*// owning process path
             char path[MAX_PATH];
