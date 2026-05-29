@@ -139,7 +139,15 @@ BYTE* GetHandleParameters(HANDLE hObject, DWORD objectType, size_t* paramsSize) 
             parameters = BuildParameter(paramsSize, PARAMETER_ANSISTRING, "Name", path);
             break;
         case OBJECT_TYPE_PIPE:
-
+            char path[1026];
+            DWORD retLen = GetFinalPathNameByHandleA(hObject, path, 1026, VOLUME_NAME_NT | FILE_NAME_NORMALIZED);
+            if (retLen == 0) {
+                printf("[ERROR] Failed to get name of pipe, error code: %d\n", GetLastError());
+                return parameters;
+            }
+            parameters = BuildParameter(paramsSize, PARAMETER_ANSISTRING, "Name", path);
+            break;
+ 
         //TODO: Semaphore
         //TODO: Mutex
         //TODO: Event
