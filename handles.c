@@ -156,15 +156,9 @@ BYTE* GetHandleParameters(HANDLE hObject, DWORD objectType, size_t* paramsSize) 
             free(name);
             break;
         //TODO: Semaphore
-        //TODO: Event
         //TODO: Symlink
 
-        /*// owning process path
-            char path[MAX_PATH];
-            DWORD pathLen;
-            BOOL ok = QueryFullProcessImageNameA(hObject, 0, path, &pathLen);
-            //TODO: create parameter
-            break;
+        /*
         case TYPE_TOKEN:
         // owning process
         // access rights or something like that
@@ -201,8 +195,11 @@ DWORD GetHandleObjectType(HANDLE hObject) {
         type = OBJECT_TYPE_THREAD;
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"File") == 0) {
-        //TODO: Check if it is a pipe
-        type = OBJECT_TYPE_FILE;
+        if (GetFileType(hObject) == FILE_TYPE_PIPE) {
+            type = OBJECT_TYPE_PIPE;
+        } else {
+            type = OBJECT_TYPE_FILE;
+        }
     }
     if (wcscmp(typeInfo->TypeName.Buffer, L"Event") == 0) {
         type = OBJECT_TYPE_EVENT;
