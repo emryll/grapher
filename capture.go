@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -10,8 +12,14 @@ func BeginCapture(max int) error {
 	reader := bufio.NewReader(os.Stdin)
 	path := GetInput(reader, "Enter path to save capture in (skip for default)")
 
-	//TODO: check if path is valid
-	//TODO: if it doesnt exist, ask to create
+	if !DirectoryExists(path) && !DirectoryExists(filepath.Join(path, BASE_DIR_NAME)) {
+		answer := GetInput(reader, "The directory does not exist, do you want to create it? (y/n) ")
+		if answer == strings.ToLower("y") || answer == "" {
+			//TODO: create directory
+		} else {
+			return fmt.Errorf("filepath does not exist")
+		}
+	}
 
 	var session Session
 	session.Description = GetInput(reader, "Set description for capture")
@@ -39,6 +47,13 @@ func BeginCapture(max int) error {
 		}
 	}
 	session.WriteToDisk(path)
+	return nil
+}
+
+func (s Session) WriteToDisk(path string) error {
+	//
+	//TODO: write object access
+	//TODO: write graphsnapshots
 	return nil
 }
 
