@@ -157,18 +157,18 @@ type Traversal struct {
 	weight int
 }
 
-type AccessEntry struct {
-	Object uint32  // type enum
-	Name   string  // name of object
-	Type   Bitmask // type of interaction
-	Handle uint32
-	Pid    uint32
-	Params map[string]Parameter // extended object info
-}
-
 var g_ProcessTable *ProcessTable
 
 type ProcessTable struct {
 	mu    sync.RWMutex
 	Table map[uint32]*ProcessSnapshot
+}
+
+type AccessEntry struct {
+	Object uint32               `json:"object"` // type enum
+	Name   string               `json:"name"`   // name of object
+	Type   Bitmask              `json:"type"`   // type of interaction
+	Handle uint32               `json:"handle"`
+	Pid    uint32               `json:"pid"`
+	Params map[string]Parameter `json:"params"` // extended object info
 }
