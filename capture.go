@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -50,9 +51,15 @@ func BeginCapture(max int) error {
 	return nil
 }
 
-func (s Session) WriteToDisk(path string) error {
-	//
-	//TODO: write object access
+func (s Snapshot) WriteToDisk(path string) error {
+	graphs, err := json.MarshalIndent(s.Graphs, "", " ")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath.Join(path, s.Name+"_graphs.json"), graphs, 0644)
+	if err != nil {
+		return err
+	}
 	//TODO: write graphsnapshots
 	return nil
 }
