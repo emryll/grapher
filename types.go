@@ -85,31 +85,31 @@ type Parameter struct {
 
 // describes a capture
 type Session struct {
-	Timestamp   time.Time
-	Description string
-	Snapshots   []Snapshot
-	Selected    *Snapshot // currently selected snap
+	Timestamp   time.Time  `json:"timestamp"`
+	Description string     `json:"description"`
+	Snapshots   []Snapshot `json:"-"`
+	Selected    *Snapshot  `json:"-"` // currently selected snap
 }
 
 type GraphSnapshot map[uint32]*ProcessSnapshot
 
 type Snapshot struct {
-	Name   string
-	Graphs []GraphSnapshot
+	Name   string          `json:"name"`
+	Graphs []GraphSnapshot `json:"graphs"`
 	//TODO: object access registry
-	Interval uint32 // offset from timestamp in seconds
+	Interval uint32 `json:"interval"` // offset from timestamp in seconds
 }
 
 // Describes a process (node)
 type ProcessSnapshot struct {
 	Connections map[uint32]*Connection
-	Name        string
-	ProcessId   uint32
-	ParentName  string
-	ParentPid   uint32
-	IsSigned    bool
-	IsElevated  bool
-	Graph       *Graph
+	Name        string `json:"name"`
+	ProcessId   uint32 `json:"pid"`
+	ParentName  string `json:"parent"`
+	ParentPid   uint32 `json:"ppid"`
+	IsSigned    bool   `json:"is_signed"`
+	IsElevated  bool   `json:"is_elevated"`
+	Graph       *Graph `json:"-"`
 }
 
 type CaptureConfig struct {
@@ -148,8 +148,8 @@ type ProcessNode struct {
 }
 
 type Connection struct {
-	Type   Bitmask
-	Weight int
+	Type   Bitmask `json:"conn_type"`
+	Weight int     `json:"weight"`
 }
 
 type Traversal struct {
