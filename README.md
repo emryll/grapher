@@ -1,6 +1,5 @@
 # grapher
-This is a tool I am using for data collection and viewing as part of my research on detecting multi-process malware.
-With this you can capture graph snapshots on a Windows x64 system, and then later you can load these collected snapshots and view/query them via the interactive command-line interface.
+This is a tool I am writing as part of my research on multi-process correlation for detecting multi-process malware. This tool allows you to capture process relationship graph data over a period of time on Windows systems, and to later view previously collected process relationship data, using an interactive command-line interface or exporting the data.
 
 > **Not ready to be used at this point in time!**
 
