@@ -14,9 +14,10 @@ grapher.exe capture [flags]
 You can use flags to alter the config, which defines intervals and max snapshot count.
 Available flags are:
 ```
--m Maximum amount of snapshots to take.
--t Automatic capture timeout (minutes).
--p Process refresh interval (seconds).
+-m   Maximum amount of snapshots to take.
+-t   Automatic capture timeout (minutes).
+-p   Process refresh interval (seconds).
+-h   Handle refresh interval (seconds).
 ```
 
 ### Viewing data
