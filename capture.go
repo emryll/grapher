@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -40,7 +41,11 @@ func BeginCapture(max int) error {
 		select {
 		case <-snapTicker.C:
 			relativeTime := time.Now().UnixMilli() - session.Timestamp.UnixMilli()
-			TakeSnapshot(relativeTime)
+			snapshot := TakeSnapshot(relativeTime)
+			err := snapshot.WriteToDisk(path)
+			if err != nil {
+				fmt.Printf("[ERROR] Failed to write snapshot to disk: %v\n", err)
+			}
 		case <-psTicker.C:
 			ScanProcesses()
 		case <-handleTicker.C:
@@ -60,7 +65,8 @@ func (s Snapshot) WriteToDisk(path string) error {
 	if err != nil {
 		return err
 	}
-	//TODO: write graphsnapshots
+
+	//TODO: write object access registry
 	return nil
 }
 
