@@ -31,11 +31,12 @@ grapher.exe <path>
 
 Available commands in the interactive CLI are:
 ```
-help [command]
-exit
-state
-select <snap>
-overview
-grapher
-find <min>
+help [command]  Show information about commands.
+exit            Exit the commandline interface.
+state           Show the current state, in regards to snaps.
+select <snap>   Select a snapshot for analysis (by name).
+overview        Get a quick overview about session and selected snap.
+graphs          View the graphs in the currently selected snap.
+pools [flags]   Split graphs into subsets based on a traversal rule.
+find <min>      Find all processes with more than min connections.
 ```
