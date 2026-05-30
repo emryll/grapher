@@ -2,6 +2,8 @@
 This is a tool I am using for data collection and viewing as part of my research on detecting multi-process malware.
 With this you can capture graph snapshots on a Windows x64 system, and then later you can load these collected snapshots and view/query them via the interactive command-line interface.
 
+> **Not ready to be used at this point in time!**
+
 ## Usage
 To build the tool, simply run `go build`.
 Note that you need to have both the compiler and a C compiler.
@@ -21,10 +23,19 @@ Available flags are:
 ```
 
 ### Viewing data
-To enter the interactive command-line interface used to view captured data, run
+To enter the interactive commandline interface used to view captured data, run
 ```
 grapher.exe <path>
 ```
 , where `path` is the path to the capture folder.
 
-**Not ready to be used at this point in time!**
+Available commands in the interactive CLI are:
+```
+help [command]
+exit
+state
+select <snap>
+overview
+grapher
+find <min>
+```
