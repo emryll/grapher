@@ -21,5 +21,10 @@ Available flags are:
 ```
 
 ### Viewing data
+To enter the interactive command-line interface used to view captured data, run
+```
+grapher.exe <path>
+```
+, where `path` is the path to the capture folder.
 
 **Not ready to be used at this point in time!**
