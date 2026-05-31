@@ -85,8 +85,9 @@ type Parameter struct {
 
 // describes a capture
 type Session struct {
-	Timestamp   time.Time  `json:"timestamp"`
+	Name        string     `json:"name"`
 	Description string     `json:"description"`
+	Timestamp   time.Time  `json:"timestamp"`
 	Snapshots   []Snapshot `json:"-"`
 	Selected    *Snapshot  `json:"-"` // currently selected snap
 }
