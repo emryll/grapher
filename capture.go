@@ -28,6 +28,10 @@ func BeginCapture(max int) error {
 	session.Timestamp = time.Now()
 
 	g_ProcessTable = CreateProcessTable()
+	err := session.InitializeCapture(path)
+	if err != nil {
+		return fmt.Errorf("failed to initialize capture: %v\n", err)
+	}
 	//TODO: start building graph
 
 	//* capture loop
@@ -75,6 +79,14 @@ func (s Snapshot) WriteToDisk(path string) error {
 		return err
 	}
 	return nil
+}
+
+func (s Session) InitializeCapture(path string) error {
+	metadata, err := json.MarshalIndent(s, "", " ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(path, s.Name+".json"), metadata, 0644)
 }
 
 func LoadSession(dir string) (Session, error) {
