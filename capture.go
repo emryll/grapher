@@ -66,7 +66,14 @@ func (s Snapshot) WriteToDisk(path string) error {
 		return err
 	}
 
-	//TODO: write object access registry
+	oac, err := json.MarshalIndent(g_ObjectAccessRegistry, "", " ")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath.Join(path, s.Name+"_objects.json"), oac, 0644)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
