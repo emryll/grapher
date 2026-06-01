@@ -14,12 +14,10 @@ func BeginCapture(max int) error {
 	reader := bufio.NewReader(os.Stdin)
 	path := GetInput(reader, "Enter path to save capture in (skip for default)")
 
-	if !DirectoryExists(path) && !DirectoryExists(filepath.Join(path, BASE_DIR_NAME)) {
-		answer := GetInput(reader, "The directory does not exist, do you want to create it? (y/n) ")
-		if answer == strings.ToLower("y") || answer == "" {
-			//TODO: create directory
-		} else {
-			return fmt.Errorf("filepath does not exist")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err = os.MkdirAll(path, 0644)
+		if err != nil {
+			return err
 		}
 	}
 
