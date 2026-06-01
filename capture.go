@@ -100,7 +100,22 @@ func LoadSession(dir string) (Session, error) {
 		return Session{}, err
 	}
 
-	//TODO: read snapshots into the same struct
+	snapFiles := FindSnapshots(dir)
+	if len(snapFiles) == 0 {
+		return Session{}, fmt.Errorf("no snapshots found")
+	}
+	session.Snapshots = make([]Snapshot, len(snapFiles))
+	for i, snap := range snapFiles {
+		data, err = os.ReadFile(snap)
+		if err != nil {
+			fmt.Printf("[WARNING] Failed to read snap: %v\n", err)
+			continue
+		}
+		err = json.Unmarshal(data, &session.Snapshots[i])
+		if err != nil {
+			fmt.Printf("[WARNING] Failed to unmarshal snap: %v\n", err)
+		}
+	}
 	return session, nil
 }
 
