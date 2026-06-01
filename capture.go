@@ -30,7 +30,7 @@ func BeginCapture(max int) error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize capture: %v\n", err)
 	}
-	//TODO: start building graph
+	g_GraphRegistry.CreateNewGraph()
 
 	//* capture loop
 	snapTicker := time.NewTicker(time.Duration(SNAP_INTERVAL) * time.Minute)
