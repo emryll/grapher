@@ -43,7 +43,7 @@ func BeginCapture(max int) error {
 		select {
 		case <-snapTicker.C:
 			relativeTime := time.Now().UnixMilli() - session.Timestamp.UnixMilli()
-			snapshot := TakeSnapshot(relativeTime)
+			snapshot := g_GraphRegistry.TakeSnapshot(relativeTime)
 			err := snapshot.WriteToDisk(path)
 			if err != nil {
 				fmt.Printf("[ERROR] Failed to write snapshot to disk: %v\n", err)
@@ -87,13 +87,25 @@ func (s Session) InitializeCapture(path string) error {
 	return os.WriteFile(filepath.Join(path, s.Name+".json"), metadata, 0644)
 }
 
+// Load a capture session from disk.
 func LoadSession(dir string) (Session, error) {
-	// - traverse dir
-	// -
+	data, err := os.ReadFile(filepath.Join(dir, "session.json"))
+	if err != nil {
+		return Session{}, fmt.Errorf("failed to read session metadata (\"session.json\"): %v", err)
+	}
+
+	var session Session
+	err = json.Unmarshal(data, &session)
+	if err != nil {
+		return Session{}, err
+	}
+
+	//TODO: read snapshots into the same struct
+	return session, nil
 }
 
 // interval is the relative offset from beginning of capture (seconds)
-func (gr GraphRegistry) TakeSnapshot(interval int) Snapshot {
+func (gr GraphRegistry) TakeSnapshot(interval int64) Snapshot {
 	var snap Snapshot
 	for _, graph := range gr {
 		var graphSnap GraphSnapshot
