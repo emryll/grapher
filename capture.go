@@ -143,3 +143,21 @@ func (gr GraphRegistry) TakeSnapshot(interval int64) Snapshot {
 	snap.Interval = uint32(interval)
 	return snap
 }
+
+// Find all .snap files in a given directory
+func FindSnapshots(dir string) ([]string, error) {
+	var snapPaths []string
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".snap" {
+			snapPaths = append(snapPaths, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return snapPaths, nil
+}
